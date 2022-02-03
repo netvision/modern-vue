@@ -15,7 +15,9 @@ const showInfo = (log) => {
 
 onMounted(async () => {
   let res = await axios
-    .get('http://rkjdss.dalmiatrusts.in/rjdssapi/web/staff-logs/daily?d=2022-02-01')
+    .get('http://rkjdss.dalmiatrusts.in/rjdssapi/web/staff-logs/daily?d=2022-02-01', {
+      headers: { Accept: 'application/json, text/plain, */*' },
+    })
     .then((r) => r.data)
   res.forEach((r) => {
     let log = {
