@@ -1,54 +1,64 @@
-<script setup lang="ts" name="IndexPage">
-import { useUserStore } from '~/stores/user'
+<script setup name="IndexPage">
+import axios from 'axios'
+import { GoogleMap, Marker } from 'vue3-google-map'
+//28.241271107538967, 75.65319151008205
+const center = { lat: 28.241271107538967, lng: 75.65319151008205 }
 
-const user = useUserStore()
-const name = ref(user.savedName)
+const logs = ref([])
 
-const router = useRouter()
-const go = () => {
-  if (name.value) router.push(`/hi/${encodeURIComponent(name.value)}`)
+const info = ref({})
+
+const showInfo = (log) => {
+  console.log(log.info)
+  info.value = log.info
 }
 
-const { t } = useI18n()
+onMounted(async () => {
+  let res = await axios
+    .get('http://rkjdss.dalmiatrusts.in/rjdssapi/web/staff-logs/daily?d=2022-02-01')
+    .then((r) => r.data)
+  res.forEach((r) => {
+    let log = {
+      location: { lat: +r.latitude, lng: +r.longitude },
+      label: r.user,
+      title: r.user,
+      info: r,
+    }
+    logs.value.push(log)
+  })
+  console.log(res)
+})
 </script>
 
 <template>
-  <div>
-    <p class="text-4xl">
-      <carbon-campsite class="inline-block" />
-    </p>
-    <p>
-      <a rel="noreferrer" href="https://github.com/antfu/vitesse" target="_blank">
-        MODERN VUE
-      </a>
-    </p>
-    <p>
-      <em class="text-sm opacity-75">{{ t('intro.desc') }}</em>
-    </p>
-
-    <div class="py-4" />
-
-    <input
-      id="input"
-      v-model="name"
-      :placeholder="t('intro.whats-your-name')"
-      :aria-label="t('intro.whats-your-name')"
-      type="text"
-      autocomplete="false"
-      p="x-4 y-2"
-      w="250px"
-      text="center"
-      bg="transparent"
-      border="~ rounded gray-200 dark:gray-700"
-      outline="none active:none"
-      @keydown.enter="go"
-    />
-    <label class="hidden" for="input">{{ t('intro.whats-your-name') }}</label>
-
-    <div>
-      <button class="m-3 text-sm btn" :disabled="!name" @click="go">
-        {{ t('button.go') }}
-      </button>
+  <div class="relative">
+    <h2>Admin Dashboard</h2>
+    <GoogleMap
+      api-key="AIzaSyDG9I2B0BJsIx9gtd7Hw9_9_0QA4xtBHnw"
+      style="width: 100%; height: 500px"
+      :center="center"
+      :zoom="10"
+    >
+      <Marker
+        v-for="(log, i) in logs"
+        :key="i"
+        :options="{ position: log.location, label: log.label, title: log.title }"
+        @click="showInfo(log)"
+      />
+    </GoogleMap>
+    <div class="absolute top-12 right-4 w-lg shadow-md shadow-gray-500 bg-blue-500/50">
+      <h2 class="font-serif text-2xl font-medium text-left">
+        {{ info.user }} @ {{ info.date_time }}
+      </h2>
+      <hr />
+      <h2 class="text-xl font-medium text-left">
+        {{ info.contacted_person }}
+      </h2>
+      <p class="text-lg font-medium text-left">
+        <span>{{ info.discussion }}</span
+        ><br />
+        {{ info.other_info }}
+      </p>
     </div>
   </div>
 </template>
